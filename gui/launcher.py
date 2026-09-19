@@ -173,29 +173,52 @@ def start_api(api_port_arg):
 
 
 def _rehydrate_persisted_tasks(actual_port):
-    """launcher 启动后,把持久化的任务数据重新注册到 sqlmapapi。"""
+    """launcher 启动后,把持久化的扫描配置重新注册并启动到 sqlmapapi。
+    注意:taskid 是 sqlmapapi 随机生成的,无法复用旧的,所以持久化的是 url+options。
+    恢复后前端在下一次 /admin/list 拉取时能看到这些任务。"""
     if not persisted_tasks:
         return
     auth = "Basic %s" % base64.b64encode(("%s:%s" % (api_user, api_pass)).encode()).decode()
     rehydrated = 0
-    for tid, info in list(persisted_tasks.items()):
+    for old_tid, info in list(persisted_tasks.items()):
         opts = dict(info.get("options") or {})
         if not opts.get("url"):
-            persist_task_remove(tid)
+            persist_task_remove(old_tid)
             continue
         try:
+            # 1. 创建新任务
             conn = http.client.HTTPConnection(API_HOST, actual_port, timeout=5)
-            conn.request("POST", "/option/%s/set" % tid,
+            conn.request("GET", "/task/new", headers={"Authorization": auth, "Connection": "close"})
+            r = conn.getresponse(); data = r.read(); conn.close()
+            j = json.loads(data.decode())
+            if not j.get("success"):
+                continue
+            new_tid = j["taskid"]
+            # 2. 设置选项
+            conn = http.client.HTTPConnection(API_HOST, actual_port, timeout=10)
+            conn.request("POST", "/option/%s/set" % new_tid,
                          body=json.dumps(opts).encode(),
                          headers={"Authorization": auth, "Content-Type": "application/json", "Connection": "close"})
-            resp = conn.getresponse()
-            conn.close()
-            if resp.status == 200:
+            r = conn.getresponse(); r.read(); conn.close()
+            # 3. 启动扫描(如果之前是 running)
+            if info.get("status") == "running":
+                # 只在 url + url 后没有 GET 参数时给出 warning;有参数时启动
+                conn = http.client.HTTPConnection(API_HOST, actual_port, timeout=5)
+                conn.request("POST", "/scan/%s/start" % new_tid,
+                             body=b'{"url": "%s"}' % opts["url"].encode(),
+                             headers={"Authorization": auth, "Content-Type": "application/json", "Connection": "close"})
+                r = conn.getresponse(); r.read(); conn.close()
                 rehydrated += 1
+                log("已重新注册并启动任务: %s -> %s (%s)" % (old_tid[:8], new_tid[:8], opts["url"][:50]))
+            else:
+                rehydrated += 1
+                log("已重新注册任务(已结束): %s -> %s" % (old_tid[:8], new_tid[:8]))
+            # 删除旧的(taskid 已变)
+            persist_task_remove(old_tid)
         except Exception as e:
-            log("持久化任务 %s 恢复失败: %s" % (tid[:8], e))
+            log("持久化任务 %s 恢复失败: %s" % (old_tid[:8], e))
     if rehydrated:
-        log("已从磁盘恢复 %d 个任务到 sqlmapapi" % rehydrated)
+        log("已完成持久化任务重新注册: %d 个" % rehydrated)
 
 
 class ProxyHandler(http.server.SimpleHTTPRequestHandler):
