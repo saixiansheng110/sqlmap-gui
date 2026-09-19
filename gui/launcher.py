@@ -234,6 +234,8 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path.startswith("/api/"):
             return self.proxy("GET")
+        if self.path == "/output-dir":
+            return self.output_dir()
         if self.path == "/health":
             payload = json.dumps({
                 "ok": True,
