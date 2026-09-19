@@ -21,17 +21,29 @@ python3 gui/launcher.py
 第二步从https://github.com/saixiansheng110/sqlmap-gui/tree/main下载gui
 第三步将gui目录放在解压好的sqlmap一级目录中与sqlmap.py同一级
 <img width="416" height="238" alt="image" src="https://github.com/user-attachments/assets/c9f21547-a1eb-4855-b86e-22d36e81f914" />
+
 进入sqlmap目录使用python3 gui/launcher.py
+
 <img width="416" height="129" alt="image" src="https://github.com/user-attachments/assets/8e7186f9-7b71-436f-bd79-a5c3ead7dad6" />
+
 访问http://127.0.0.1:8966
+
 <img width="416" height="221" alt="image" src="https://github.com/user-attachments/assets/399876d1-56e4-4f56-910b-da49947d9bb8" />
+
 这个是全部脚本
+
 <img width="416" height="221" alt="image" src="https://github.com/user-attachments/assets/a023534d-4fd5-4136-b18d-67440e402da1" />
+
 测试sqlmap-labs第20关cookie注入
+
 <img width="416" height="221" alt="image" src="https://github.com/user-attachments/assets/315bc390-878c-4e9c-b06f-5dd75d4226a9" />
+
 <img width="416" height="162" alt="image" src="https://github.com/user-attachments/assets/f9a44466-72ab-4b48-aa38-c54bae12aac2" />
+
 <img width="416" height="122" alt="image" src="https://github.com/user-attachments/assets/b9ed2a5a-3101-4564-9cb8-362e54879724" />
+
 <img width="416" height="207" alt="image" src="https://github.com/user-attachments/assets/4a255316-3bad-42c2-801d-df723b43f2a7" />
+
 <img width="416" height="189" alt="image" src="https://github.com/user-attachments/assets/6c3c525b-97db-4fe9-a28e-6fd3d0e034b8" />
 ## 功能模块
 
