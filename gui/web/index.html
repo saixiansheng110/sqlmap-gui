@@ -179,6 +179,7 @@ table.data tr:hover{background:var(--panel2)}
       <div class="empty">暂无任务<br>新建一个扫描开始</div>
     </div>
     <div class="sidebar-foot" id="apiStatus">接口:—</div>
+    <div class="sidebar-foot" id="recoveryStatus" style="border-top:none;padding-top:0"></div>
   </aside>
 
   <!-- 主区 -->
@@ -522,6 +523,17 @@ const App = {
     await this.checkApi();
     await this.loadExistingTasks();
     this.refreshTaskList();
+    // 在侧栏底部显示恢复状态,便于刷新后立即看到效果
+    const rs = document.getElementById('recoveryStatus');
+    if(rs){
+      const n = Object.keys(this.tasks).length;
+      rs.textContent = '本次加载:恢复 '+n+' 个任务 · '+new Date().toLocaleTimeString();
+      rs.style.color = n ? 'var(--ok)' : 'var(--dim)';
+    }
+    // 页面重新可见时重新拉取(应对 sqlmapapi 慢启动或用户切走再切回)
+    document.addEventListener('visibilitychange', ()=>{
+      if(!document.hidden) this.loadExistingTasks();
+    });
     this.startPolling();
   },
 
@@ -563,6 +575,12 @@ const App = {
     this.refreshTaskList();
     if(typeof App!=='undefined'){
       document.querySelectorAll('.nav-tabs button').forEach(b=>b.classList.remove('active'));
+    }
+    // 更新侧栏底部状态
+    const rs = document.getElementById('recoveryStatus');
+    if(rs){
+      rs.textContent = '本次加载:恢复 '+ids.length+' 个任务 · '+new Date().toLocaleTimeString();
+      rs.style.color = ids.length ? 'var(--ok)' : 'var(--dim)';
     }
     this.toast(`已恢复 ${ids.length} 个任务`);
     console.log('[loadExistingTasks] 已恢复', ids);
