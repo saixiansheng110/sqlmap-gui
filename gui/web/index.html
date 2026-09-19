@@ -779,6 +779,7 @@ const App = {
       const st = await this.api('POST','/scan/'+taskid+'/start', startBody);
       if(!st.success){ this.toast('启动扫描失败: '+(st.message||'')); return; }
       this.tasks[taskid] = {url:target, options:o, status:'running', returncode:null, logs:[], data:null};
+      this.persistTaskRemote(taskid, 'update', {url:target, options:o, status:'running', returncode:null});
       this.currentTask = taskid;
       this.refreshTaskList();
       this.selectTask(taskid);
@@ -945,6 +946,7 @@ const App = {
       const st = await this.api('POST','/scan/'+t.taskid+'/start', o);
       if(st.success){
         this.tasks[t.taskid] = {url:o.url+' [导出 '+db+'.'+tbl+']', options:o, status:'running', returncode:null, logs:[], data:null};
+        this.persistTaskRemote(t.taskid, 'update', {url:o.url+' [导出 '+db+'.'+tbl+']', options:o, status:'running', returncode:null});
         this.currentTask = t.taskid;
         this.refreshTaskList();
         this.toast('导出任务已启动,稍后在结果面板查看');
@@ -1145,6 +1147,7 @@ const App = {
       const st = await this.api('POST','/scan/'+t.taskid+'/start', {url:opts.url});
       if(!st.success){ this.toast('启动失败: '+(st.message||'')); return; }
       this.tasks[t.taskid] = {url:opts.url+' ['+title+']', options:opts, status:'running', returncode:null, logs:[], data:null, peAction:action};
+      this.persistTaskRemote(t.taskid, 'update', {url:opts.url+' ['+title+']', options:opts, status:'running', returncode:null});
       this.currentTask = t.taskid;
       this.audit.push({time, taskid:t.taskid, action:title, detail:detail+' | 理由:'+reason, result:'已启动'});
       this.renderAudit(); this.refreshTaskList(); this.renderTasks();
@@ -1263,6 +1266,12 @@ const App = {
   },
 
   // ---- 工具 ----
+  // 通知 launcher 把任务持久化到磁盘(用于 launcher 重启后自动恢复)
+  persistTaskRemote(taskid, action, payload){
+    fetch('/persist-task',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(Object.assign({action,taskid},payload||{}))}).catch(()=>{});
+  },
+
   esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); },
   openModal(title, bodyHtml, onOk){
     document.getElementById('modalTitle').textContent = title;
