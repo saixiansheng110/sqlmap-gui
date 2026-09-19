@@ -520,8 +520,52 @@ const App = {
     });
     this.updateCmdPreview();
     await this.checkApi();
+    await this.loadExistingTasks();
     this.refreshTaskList();
     this.startPolling();
+  },
+
+  // 页面刷新后从 sqlmapapi 拉回所有现存任务的状态与目标 URL
+  // 重试 3 次:首次启动时 sqlmapapi 可能还在初始化
+  async loadExistingTasks(){
+    let ids = [];
+    let lastErr = null;
+    for(let attempt=0; attempt<3; attempt++){
+      try{
+        const r = await this.api('GET','/admin/list');
+        if(r && r.success && r.tasks){
+          ids = Object.keys(r.tasks);
+          if(ids.length || attempt===2) break;
+        } else {
+          lastErr = 'admin/list 返回: '+JSON.stringify(r);
+        }
+      }catch(e){ lastErr = e.message; }
+      await new Promise(r=>setTimeout(r,1000));
+    }
+    if(!ids.length){
+      if(lastErr) console.warn('[loadExistingTasks] 没有任务且最后错误:', lastErr);
+      return;
+    }
+    for(const id of ids){
+      let url = '(已存在的任务)';
+      let status = 'unknown';
+      try{
+        const o = await this.api('GET','/option/'+id+'/list');
+        if(o && o.success && o.options && o.options.url) url = o.options.url;
+      }catch(e){}
+      try{
+        const s = await this.api('GET','/scan/'+id+'/status');
+        if(s && s.success && s.status) status = s.status;
+      }catch(e){}
+      this.tasks[id] = {url, options:{}, status, returncode:null, logs:[], data:null, recovered:true};
+    }
+    this.currentTask = ids[ids.length-1];
+    this.refreshTaskList();
+    if(typeof App!=='undefined'){
+      document.querySelectorAll('.nav-tabs button').forEach(b=>b.classList.remove('active'));
+    }
+    this.toast(`已恢复 ${ids.length} 个任务`);
+    console.log('[loadExistingTasks] 已恢复', ids);
   },
 
   // ---- 分步向导 ----
