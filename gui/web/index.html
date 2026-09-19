@@ -542,10 +542,12 @@ const App = {
   async loadExistingTasks(){
     let ids = [];
     let lastErr = null;
+    let apiOk = false;
     for(let attempt=0; attempt<3; attempt++){
       try{
         const r = await this.api('GET','/admin/list');
         if(r && r.success && r.tasks){
+          apiOk = true;
           ids = Object.keys(r.tasks);
           if(ids.length || attempt===2) break;
         } else {
@@ -554,8 +556,22 @@ const App = {
       }catch(e){ lastErr = e.message; }
       await new Promise(r=>setTimeout(r,1000));
     }
+    if(!apiOk){
+      // sqlmapapi 完全连不上:launcher 可能死了
+      const rs = document.getElementById('recoveryStatus');
+      if(rs){
+        rs.innerHTML = 'sqlmapapi 无响应 · <span style="color:var(--err)">请重启 launcher</span>';
+        rs.style.color = 'var(--err)';
+      }
+      return;
+    }
     if(!ids.length){
-      if(lastErr) console.warn('[loadExistingTasks] 没有任务且最后错误:', lastErr);
+      // sqlmapapi 在跑,但没有任务:要么 launch 重启过任务丢了,要么真的没任务
+      const rs = document.getElementById('recoveryStatus');
+      if(rs){
+        rs.innerHTML = 'sqlmapapi 在运行 · 本次未发现任务(若启动过扫描则任务已丢失:launcher 重启会清空 sqlmapapi 内存)';
+        rs.style.color = 'var(--warn)';
+      }
       return;
     }
     for(const id of ids){
