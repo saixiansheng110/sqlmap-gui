@@ -1,0 +1,506 @@
+[
+{
+"name": "0eunion",
+"priority": "HIGHEST",
+"desc": "把 UNION 前的整数改成 0e0 形式(如 1 UNION → 0e0UNION),绕过对'整数+UNION'的过滤",
+"use": "目标过滤了 UNION 查询但没过滤科学计数法"
+},
+{
+"name": "apostrophemask",
+"priority": "LOWEST",
+"desc": "把单引号替换成全角Unicode形式(' → %EF%BC%87)",
+"use": "目标对普通单引号过滤,但数据库接受宽字符"
+},
+{
+"name": "apostrophenullencode",
+"priority": "LOWEST",
+"desc": "把单引号替换成非法双Unicode编码(' → %00%27)",
+"use": "目标对单引号做了简单转义,尝试用编码绕过"
+},
+{
+"name": "appendnullbyte",
+"priority": "LOWEST",
+"desc": "在载荷末尾追加NULL字节(%00)",
+"use": "Access等数据库,绕过基于字符串结尾的过滤"
+},
+{
+"name": "base64encode",
+"priority": "LOW",
+"desc": "对整个载荷做Base64编码",
+"use": "目标对SQL关键字过滤,但接受Base64参数"
+},
+{
+"name": "between",
+"priority": "HIGHEST",
+"desc": "把大于号(>)替换为 NOT BETWEEN 0 AND,等号(=)替换为 BETWEEN AND",
+"use": "目标过滤了比较运算符(>、=)"
+},
+{
+"name": "binary",
+"priority": "HIGHEST",
+"desc": "在合适位置插入 binary 关键字",
+"use": "绕过对大小写不敏感的过滤,强制二进制比较"
+},
+{
+"name": "blindbinary",
+"priority": "NORMAL",
+"desc": "盲注场景下处理括号匹配的辅助脚本",
+"use": "布尔/时间盲注,载荷含复杂括号结构"
+},
+{
+"name": "bluecoat",
+"priority": "NORMAL",
+"desc": "SQL语句后的空格替换为随机空白字符,等号替换为LIKE",
+"use": "绕过BlueCoat等代理WAF的过滤"
+},
+{
+"name": "castprefix",
+"priority": "HIGHEST",
+"desc": "把开头的数值包进CAST调用(-1 UNION → CAST(-1 AS DECIMAL) UNION)",
+"use": "目标过滤了裸数字开头的UNION注入"
+},
+{
+"name": "chardoubleencode",
+"priority": "LOWEST",
+"desc": "对每个字符做双重URL编码",
+"use": "目标做了一次URL解码,双重编码可绕过"
+},
+{
+"name": "charencode",
+"priority": "LOWEST",
+"desc": "对载荷做URL编码",
+"use": "目标对特殊字符过滤,基础编码绕过"
+},
+{
+"name": "charunicodeencode",
+"priority": "LOWEST",
+"desc": "对载荷做Unicode URL编码(%u0049)",
+"use": "目标对普通URL编码有防护,尝试Unicode编码"
+},
+{
+"name": "charunicodeescape",
+"priority": "LOWEST",
+"desc": "对载荷做Unicode转义 escape 形式",
+"use": "目标过滤了引号,用Unicode转义替代"
+},
+{
+"name": "commalesslimit",
+"priority": "NORMAL",
+"desc": "去掉LIMIT中的逗号(LIMIT 2,1 → LIMIT 1 OFFSET 2)",
+"use": "目标过滤了逗号,但允许OFFSET"
+},
+{
+"name": "commalessmid",
+"priority": "NORMAL",
+"desc": "去掉MID函数中的逗号(MID(1,2,3) → MID(version FROM 2 FOR 1))",
+"use": "目标过滤了逗号,盲注需用MID时"
+},
+{
+"name": "commentbeforeparentheses",
+"priority": "NORMAL",
+"desc": "在括号前插入注释(IF( → IF/**/( )",
+"use": "目标过滤了函数调用,用注释干扰匹配"
+},
+{
+"name": "concat2concatws",
+"priority": "NORMAL",
+"desc": "把CONCAT(a,b)替换成CONCAT_WS(1,a,b)",
+"use": "目标过滤了CONCAT但没过滤CONCAT_WS"
+},
+{
+"name": "decentities",
+"priority": "NORMAL",
+"desc": "把字符替换为十进制HTML实体",
+"use": "目标在HTML上下文,绕过对明文字符的过滤"
+},
+{
+"name": "dollarquote",
+"priority": "NORMAL",
+"desc": "用 $$ 包裹字符串代替引号",
+"use": "目标过滤了单引号,PostgreSQL等支持美元引用"
+},
+{
+"name": "dunion",
+"priority": "HIGHEST",
+"desc": "在UNION前加一个随机数(1 UNION → 12345 UNION)",
+"use": "目标过滤了'数字+UNION'但没过滤大数字"
+},
+{
+"name": "equaltolike",
+"priority": "HIGHEST",
+"desc": "把等号(=)替换为LIKE",
+"use": "目标过滤了等号,但允许LIKE模糊匹配"
+},
+{
+"name": "equaltorlike",
+"priority": "HIGHEST",
+"desc": "把等号(=)替换为RLIKE",
+"use": "目标过滤了等号和LIKE,MySQL支持RLIKE正则"
+},
+{
+"name": "escapequotes",
+"priority": "NORMAL",
+"desc": "转义引号(加反斜杠)",
+"use": "目标对引号做了防护,尝试转义绕过"
+},
+{
+"name": "greatest",
+"priority": "HIGHEST",
+"desc": "把大于号(>)替换为GREATEST函数",
+"use": "目标过滤了大于号,用GREATEST函数替代比较"
+},
+{
+"name": "halfversionedmorekeywords",
+"priority": "LOW",
+"desc": "在每个关键字前加带版本号的注释(MySQL特有)",
+"use": "绕过MySQL的WAF,利用版本注释特性"
+},
+{
+"name": "hex2char",
+"priority": "LOW",
+"desc": "把十六进制替换为CHAR函数",
+"use": "目标过滤了0x开头的十六进制"
+},
+{
+"name": "hexentities",
+"priority": "NORMAL",
+"desc": "把字符替换为十六进制HTML实体",
+"use": "HTML上下文绕过字符过滤"
+},
+{
+"name": "htmlencode",
+"priority": "NORMAL",
+"desc": "对载荷做HTML编码",
+"use": "目标在HTML上下文,绕过对SQL字符的过滤"
+},
+{
+"name": "if2case",
+"priority": "NORMAL",
+"desc": "把IF函数替换为CASE WHEN",
+"use": "目标过滤了IF函数,用CASE WHEN替代"
+},
+{
+"name": "ifnull2casewhenisnull",
+"priority": "NORMAL",
+"desc": "把IFNULL替换为CASE WHEN ISNULL",
+"use": "目标过滤了IFNULL,用CASE WHEN替代"
+},
+{
+"name": "ifnull2ifisnull",
+"priority": "NORMAL",
+"desc": "把IFNULL替换为IF(ISNULL)",
+"use": "目标过滤了IFNULL,用IF+ISNULL替代"
+},
+{
+"name": "informationschemacomment",
+"priority": "NORMAL",
+"desc": "在information_schema后加注释",
+"use": "绕过对information_schema的过滤"
+},
+{
+"name": "infoschema2innodb",
+"priority": "NORMAL",
+"desc": "用InnoDB内部表替代information_schema",
+"use": "目标过滤了information_schema,MySQL可用InnoDB元数据"
+},
+{
+"name": "least",
+"priority": "HIGHEST",
+"desc": "把小于号(<)替换为LEAST函数",
+"use": "目标过滤了小于号,用LEAST函数替代比较"
+},
+{
+"name": "lowercase",
+"priority": "NORMAL",
+"desc": "把所有关键字转为小写",
+"use": "目标对大写关键字敏感,小写可绕过"
+},
+{
+"name": "luanginx",
+"priority": "NORMAL",
+"desc": "针对Lua+Nginx环境的绕过",
+"use": "目标使用Lua+Nginx组合的WAF"
+},
+{
+"name": "luanginxmore",
+"priority": "NORMAL",
+"desc": "Lua+Nginx环境的增强绕过",
+"use": "luanginx不够用时使用"
+},
+{
+"name": "mid2leftright",
+"priority": "NORMAL",
+"desc": "把MID函数替换为LEFT和RIGHT",
+"use": "目标过滤了MID,用LEFT/RIGHT替代"
+},
+{
+"name": "misunion",
+"priority": "HIGHEST",
+"desc": "在UNION前加干扰字符绕过匹配",
+"use": "目标用正则匹配UNION,加干扰字符绕过"
+},
+{
+"name": "modsecurityversioned",
+"priority": "LOW",
+"desc": "用MySQL版本注释绕过ModSecurity WAF",
+"use": "目标用ModSecurity,MySQL环境"
+},
+{
+"name": "modsecurityzeroversioned",
+"priority": "LOW",
+"desc": "用零版本号注释绕过ModSecurity",
+"use": "目标用ModSecurity,版本注释绕过"
+},
+{
+"name": "mssqlnosemicolon",
+"priority": "NORMAL",
+"desc": "去掉MSSQL语句中的分号",
+"use": "目标过滤了分号,MSSQL堆叠查询场景"
+},
+{
+"name": "multiplespaces",
+"priority": "NORMAL",
+"desc": "在关键字前后加多个空格",
+"use": "目标用精确匹配关键字,多空格干扰"
+},
+{
+"name": "odbcbrace",
+"priority": "NORMAL",
+"desc": "用大括号包裹ODBC表达式",
+"use": "目标过滤了ODBC调用,用大括号绕过"
+},
+{
+"name": "oraclequote",
+"priority": "NORMAL",
+"desc": "Oracle环境下的引号绕过",
+"use": "目标为Oracle,过滤了引号"
+},
+{
+"name": "ord2ascii",
+"priority": "LOW",
+"desc": "把ORD函数替换为ASCII",
+"use": "目标过滤了ORD,用ASCII替代"
+},
+{
+"name": "overlongutf8",
+"priority": "LOW",
+"desc": "把字符替换为超长UTF8编码",
+"use": "目标对UTF8解码,超长编码可绕过过滤"
+},
+{
+"name": "overlongutf8more",
+"priority": "LOW",
+"desc": "更强的超长UTF8编码",
+"use": "overlongutf8不够时使用"
+},
+{
+"name": "percentage",
+"priority": "NORMAL",
+"desc": "在关键字每个字符前加百分号(SELECT → %S%E%L%E%C%T)",
+"use": "目标用整词匹配关键字,百分号干扰"
+},
+{
+"name": "plus2concat",
+"priority": "NORMAL",
+"desc": "把加号(+)替换为CONCAT",
+"use": "MSSQL环境,目标过滤了加号连接符"
+},
+{
+"name": "plus2fnconcat",
+"priority": "NORMAL",
+"desc": "把加号替换为函数式CONCAT",
+"use": "MSSQL环境,plus2concat的变体"
+},
+{
+"name": "quote2ltat",
+"priority": "NORMAL",
+"desc": "把引号替换为 <- 形式",
+"use": "目标过滤了引号,尝试特殊符号替代"
+},
+{
+"name": "randomcase",
+"priority": "NORMAL",
+"desc": "把关键字大小写随机化(SeLeCt)",
+"use": "目标对大小写敏感的精确匹配"
+},
+{
+"name": "randomcomments",
+"priority": "LOW",
+"desc": "在关键字中随机插入注释(SEL/**/ECT)",
+"use": "目标用整词匹配关键字,注释干扰"
+},
+{
+"name": "schemasplit",
+"priority": "NORMAL",
+"desc": "把information_schema拆分绕过过滤",
+"use": "目标过滤了information_schema整词"
+},
+{
+"name": "scientific",
+"priority": "NORMAL",
+"desc": "用科学计数法表示数字",
+"use": "目标过滤了普通数字,用科学计数法绕过"
+},
+{
+"name": "sign",
+"priority": "NORMAL",
+"desc": "用SIGN函数替代比较运算",
+"use": "目标过滤了比较运算符,用SIGN函数替代"
+},
+{
+"name": "sleep2getlock",
+"priority": "NORMAL",
+"desc": "把SLEEP替换为GET_LOCK",
+"use": "时间盲注,目标过滤了SLEEP函数"
+},
+{
+"name": "sleep2hex",
+"priority": "NORMAL",
+"desc": "把SLEEP替换为十六进制形式",
+"use": "时间盲注,目标过滤了明文SLEEP"
+},
+{
+"name": "sp_password",
+"priority": "LOW",
+"desc": "在末尾追加sp_password隐藏日志",
+"use": "MSSQL环境,隐藏注入痕迹"
+},
+{
+"name": "space2comment",
+"priority": "HIGHEST",
+"desc": "把空格替换为注释/**/(SELECT id → SELECT/**/id)",
+"use": "目标过滤了空格,用注释替代分隔"
+},
+{
+"name": "space2dash",
+"priority": "HIGHEST",
+"desc": "把空格替换为破折号注释(-- )",
+"use": "目标过滤了空格,用破折号注释绕过"
+},
+{
+"name": "space2hash",
+"priority": "HIGHEST",
+"desc": "把空格替换为#注释",
+"use": "MySQL环境,目标过滤了空格"
+},
+{
+"name": "space2morecomment",
+"priority": "LOW",
+"desc": "把空格替换为多重注释",
+"use": "space2comment不够时使用"
+},
+{
+"name": "space2morehash",
+"priority": "LOW",
+"desc": "把空格替换为多重#注释",
+"use": "MySQL环境,space2hash增强版"
+},
+{
+"name": "space2mssqlblank",
+"priority": "NORMAL",
+"desc": "把空格替换为MSSQL合法的空白字符",
+"use": "MSSQL环境,目标过滤了普通空格"
+},
+{
+"name": "space2mssqlhash",
+"priority": "NORMAL",
+"desc": "把空格替换为#注释(MSSQL)",
+"use": "MSSQL环境,目标过滤了空格"
+},
+{
+"name": "space2mysqlblank",
+"priority": "NORMAL",
+"desc": "把空格替换为MySQL合法的空白字符",
+"use": "MySQL环境,目标过滤了普通空格"
+},
+{
+"name": "space2mysqldash",
+"priority": "NORMAL",
+"desc": "把空格替换为破折号注释(MySQL)",
+"use": "MySQL环境,目标过滤了空格"
+},
+{
+"name": "space2plus",
+"priority": "LOW",
+"desc": "把空格替换为加号",
+"use": "目标过滤了空格,用加号替代"
+},
+{
+"name": "space2randomblank",
+"priority": "NORMAL",
+"desc": "把空格替换为随机空白字符",
+"use": "目标过滤了空格,随机空白绕过"
+},
+{
+"name": "substring2leftright",
+"priority": "NORMAL",
+"desc": "把SUBSTRING替换为LEFT和RIGHT",
+"use": "目标过滤了SUBSTRING,用LEFT/RIGHT替代"
+},
+{
+"name": "symboliclogical",
+"priority": "HIGHEST",
+"desc": "把AND/OR替换为&&/||符号",
+"use": "目标过滤了AND/OR关键字,用符号替代"
+},
+{
+"name": "unionalltounion",
+"priority": "NORMAL",
+"desc": "把UNION ALL替换为UNION",
+"use": "目标过滤了UNION ALL但允许UNION"
+},
+{
+"name": "uniontable",
+"priority": "NORMAL",
+"desc": "用表连接替代UNION",
+"use": "目标过滤了UNION关键字"
+},
+{
+"name": "unionvalues",
+"priority": "NORMAL",
+"desc": "用VALUES形式替代UNION",
+"use": "目标过滤了UNION,用VALUES构造"
+},
+{
+"name": "unionvaluesrow",
+"priority": "NORMAL",
+"desc": "用VALUES ROW形式替代UNION",
+"use": "目标过滤了UNION,unionvalues变体"
+},
+{
+"name": "unmagicquotes",
+"priority": "HIGHEST",
+"desc": "绕过magic_quotes_gpc转义(把引号前的反斜杠吃掉)",
+"use": "PHP环境开启了magic_quotes"
+},
+{
+"name": "uppercase",
+"priority": "NORMAL",
+"desc": "把所有关键字转为大写",
+"use": "目标对小写关键字敏感"
+},
+{
+"name": "varnish",
+"priority": "NORMAL",
+"desc": "针对Varnish缓存的绕过",
+"use": "目标使用Varnish反向代理"
+},
+{
+"name": "versionedkeywords",
+"priority": "LOW",
+"desc": "用MySQL版本注释包裹关键字",
+"use": "MySQL环境,绕过WAF关键字过滤"
+},
+{
+"name": "versionedmorekeywords",
+"priority": "LOW",
+"desc": "用版本注释包裹更多关键字",
+"use": "MySQL环境,versionedkeywords增强版"
+},
+{
+"name": "xforwardedfor",
+"priority": "LOW",
+"desc": "伪造X-Forwarded-For头",
+"use": "目标根据来源IP做访问控制"
+}
+]
