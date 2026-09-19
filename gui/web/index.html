@@ -51,9 +51,11 @@ label .hint{color:var(--dim);opacity:.7;margin-left:6px}
 .task-item .ti-meta{font-size:11px;color:var(--dim);margin-top:2px;display:flex;gap:6px;align-items:center}
 .sidebar-foot{padding:8px;border-top:1px solid var(--border);font-size:11px;color:var(--dim)}
 
-.main{overflow:auto;padding:20px}
-.page{display:none}.page.active{display:block}
-.page h2{font-size:18px;margin-bottom:12px}
+.main{overflow:auto;padding:20px;display:flex;flex-direction:column}
+.page{display:none;min-height:0}
+.page.active{display:block}
+.page.active.flex-fill{display:flex;flex-direction:column;flex:1}
+.page h2{font-size:18px;margin-bottom:12px;flex-shrink:0}
 
 /* 分步向导 */
 .wizard-steps{display:flex;gap:4px;margin-bottom:16px}
@@ -109,7 +111,7 @@ table.data th,table.data td{padding:6px 8px;border-bottom:1px solid var(--border
 table.data th{color:var(--dim);font-weight:500;position:sticky;top:0;background:var(--panel)}
 table.data tr:hover{background:var(--panel2)}
 .table-wrap{max-height:420px;overflow:auto;border:1px solid var(--border);border-radius:6px}
-.log-stream{background:#000;border-radius:6px;padding:10px;font-family:monospace;font-size:12px;height:calc(100vh - 260px);min-height:400px;overflow:auto;border:1px solid var(--border)}
+.log-stream{background:#000;border-radius:6px;padding:10px;font-family:monospace;font-size:12px;height:calc(100vh - 220px);min-height:400px;overflow:auto;border:1px solid var(--border)}
 .log-line{padding:1px 0}
 .log-line .lt{color:var(--dim)}.log-line .ll{margin:0 6px}
 .log-line.CRITICAL{color:var(--crit)}.log-line.ERROR{color:var(--err)}.log-line.WARNING{color:var(--warn)}.log-line.INFO{color:#9ecbff}
@@ -355,7 +357,7 @@ table.data tr:hover{background:var(--panel2)}
               <input type="checkbox" id="autoScroll" checked style="width:auto"> 自动滚动
             </label>
           </div>
-          <div class="log-stream" id="logStream" style="flex:1;height:auto;min-height:0"></div>
+          <div class="log-stream" id="logStream"></div>
         </div>
       </div>
     </section>
@@ -645,8 +647,11 @@ const App = {
   },
 
   showPage(name){
-    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-    document.getElementById('page-'+name).classList.add('active');
+    document.querySelectorAll('.page').forEach(p=>{p.classList.remove('active');p.classList.remove('flex-fill');});
+    const pg = document.getElementById('page-'+name);
+    pg.classList.add('active');
+    // 运行监控页需要 flex 撑满高度
+    if(name==='run') pg.classList.add('flex-fill');
     document.querySelectorAll('.nav-tabs button').forEach(b=>b.classList.remove('active'));
     document.getElementById('tab-'+name).classList.add('active');
     if(name==='run') this.renderRun();
